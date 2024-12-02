@@ -1,3 +1,4 @@
-#https://prod.liveshare.vsengsaas.visualstudio.com/join?05B72A32497413670A1FB82A8AD2DBC985B8
+from game import Game
+#https://prod.liveshare.vsengsaas.visualstudio.com/join?DF58FD0905EFC1DC2421ABF5AF15AD61B1A0
 game = Game()
 game.play_game()
