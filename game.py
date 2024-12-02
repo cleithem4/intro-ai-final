@@ -79,6 +79,10 @@ class Game:
         self.roll_dice()
         self.calculate_moves()
 
+        if not self.moves:
+            print(f"No moves available for Player {'White' if self.current_player == 1 else 'Black'}.")
+            return False
+
         while self.moves and self.dice:
             print(f"Player {'White' if self.current_player == 1 else 'Black'}, it's your turn!")
             self.board.display()
@@ -103,12 +107,13 @@ class Game:
                 self.ai_move()
                 self.calculate_moves()
 
+
         # Check for winner after all moves
         winner = self.check_winner()
         if winner:
             print(f"Player {'White' if winner == 1 else 'Black'} wins!")
             return True
-
+        
         # Switch player turn
         self.current_player *= -1
         return False
