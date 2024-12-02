@@ -135,13 +135,19 @@ class Board:
     def can_bear_off(self, player):
         """
         Check if the player is allowed to bear off checkers.
-        :param player: The current player (1 or -1)
-        :return: True if bearing off is allowed, False otherwise
+        :param player: The current player (1 for white, -1 for black)
+        :return: True if all checkers are in the home board, False otherwise
         """
-        # Ensure all checkers are in the home quadrant
-        start = 0 if player == 1 else 18
-        end = 6 if player == 1 else 24
-        for i in range(start, end):
+        if player == 1:
+            # White: All checkers must be in points 0-5
+            start, end = 0, 6
+        else:
+            # Black: All checkers must be in points 18-23
+            start, end = 18, 24
+
+        for i in range(24):
             if self.points[i] and self.points[i][0] == player:
-                return False
+                if not (start <= i < end):  # Checker outside home board
+                    return False
         return True
+
