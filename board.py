@@ -1,103 +1,131 @@
 class Board:
     def __init__(self):
-        """
-        Initialize the Backgammon board.
-        """
-        self.points = [None] * 24
-        self.bar = {1: 0, -1: 0}
-        self.off = {1: 0, -1: 0}
-        self.initialize_board()
+        # Initialize the board with standard Backgammon starting positions
+        self.p1_pieces = [0] * 24
+        self.p2_pieces = [0] * 24
 
-    def initialize_board(self):
-        """
-        Set up the board with the standard initial configuration.
-        """
-        self.points[0] = (1, 2)
-        self.points[5] = (-1, 5)
-        self.points[7] = (-1, 3)
-        self.points[11] = (1, 5)
-        self.points[12] = (-1, 5)
-        self.points[16] = (1, 3)
-        self.points[18] = (1, 5)
-        self.points[23] = (-1, 2)
+        # Set starting positions for Player 1
+        self.p1_pieces[0] = 2
+        self.p1_pieces[11] = 5
+        self.p1_pieces[16] = 3
+        self.p1_pieces[18] = 5
 
-    def display(self):
-        """
-        Draw a visual representation of the Backgammon board.
-        """
-        def format_point(point):
-            if not point:
-                return " -"
-            player, count = point
-            symbol = "W" if player == 1 else "B"
-            return f"{symbol}{count}" if count < 10 else f"{symbol}9+"
+        # Set starting positions for Player 2
+        self.p2_pieces[23] = 2
+        self.p2_pieces[12] = 5
+        self.p2_pieces[7] = 3
+        self.p2_pieces[5] = 5
 
-        top_row = "  ".join(f"{24 - i:>2}" for i in range(12))
-        bottom_row = "  ".join(f"{i + 1:>2}" for i in range(12))
-        top_points = "  ".join(format_point(self.points[23 - i]) for i in range(12))
-        bottom_points = "  ".join(format_point(self.points[i]) for i in range(12))
-        bar_display = f"Bar: W={self.bar[1]} B={self.bar[-1]}"
-        off_display = f"Off: W={self.off[1]} B={self.off[-1]}"
+        # Initialize bar and off positions
+        self.bar = [0, 0]
+        self.off = [0, 0]
 
-        print(f"\n{'-' * 41}")
-        print(f"Top Row Points (Black Home):\n{top_row}\n{top_points}")
-        print(f"\n{bar_display}\n{off_display}")
-        print(f"\nBottom Row Points (White Home):\n{bottom_points}\n{bottom_row}")
-        print(f"{'-' * 41}\n")
+        # Player 1 starts the game
+        self.turn = 0
+        self.dice = []        
+    def roll_dice(self):
+        from random import randint
+        self.dice = [randint(1, 6), randint(1, 6)]
+    def get_valid_moves(self, player):
+        moves = []
+        pieces = self.p1_pieces if player == 0 else self.p2_pieces
+        opponent_pieces = self.p2_pieces if player == 0 else self.p1_pieces
+        bar_pieces = self.bar[player]
 
-    def is_valid_move(self, player, start, end):
-        """
-        Validate if a move is allowed.
-        """
-        # Moving from the bar
-        if start == 999:
-            if self.bar[player] <= 0:
-                return False
-            if player == 1 and not (0 <= end <= 5):
-                return False
-            if player == -1 and not (17 <= end <= 23):
-                print("returning false end is not between 17 and 23")
-                return False
-
-        # Moving from the board
-        elif self.points[start] is None or self.points[start][0] != player:
-            return False
-
-        # If moving to an occupied point
-        if self.points[end]:
-            target_player, target_count = self.points[end]
-            if target_player != player and target_count > 1:
-                print("retrning false, point {self.points[end]} is taken")
-                return False
-
-        return True
-
-    def move(self, player, start, end):
-        """
-        Execute a move for the player.
-        """
-        if not self.is_valid_move(player, start, end):
-            raise ValueError("Invalid move")
-        count = self.points[start][1]
-        self.points[start] = None if count == 1 else (player, count - 1)
-        if end < 24:
-            if self.points[end] is None:
-                self.points[end] = (player, 1)
-            elif self.points[end][0] == player:
-                self.points[end] = (player, self.points[end][1] + 1)
-            else:
-                self.bar[-player] += 1
-                self.points[end] = (player, 1)
+        # Check if all pieces are in the home board
+        if player == 0:
+            in_home = all(pieces[i] == 0 for i in range(0, 18))
         else:
-            self.off[player] += 1
+            in_home = all(pieces[i] == 0 for i in range(6, 24))
 
-    def can_bear_off(self, player):
-        """
-        Check if the player can bear off.
-        """
-        home_range = range(0, 6) if player == 1 else range(18, 24)
+
+        # If there are pieces on the bar, only allow moves to bring them in
+        if bar_pieces > 0:
+            for roll in self.dice:
+                target = roll - 1 if player == 0 else 24 - roll
+                if 0 <= target < 24 and opponent_pieces[target] <= 1:
+                    moves.append(("bar", target))
+            return moves
+
+        # Normal moves
         for i in range(24):
-            if self.points[i] and self.points[i][0] == player:
-                if i not in home_range:
-                    return False
-        return True
+            if pieces[i] > 0:
+                for roll in self.dice:
+                    target = i + roll if player == 0 else i - roll
+                    if 0 <= target < 24 and opponent_pieces[target] <= 1:
+                        moves.append((i, target))
+
+        # Bear-off moves (only if all pieces are in home board)
+        if in_home:
+            home_start = 18 if player == 0 else 0
+            home_end = 24 if player == 0 else 6
+            for i in range(home_start, home_end):
+                if pieces[i] > 0:
+                    moves.append((i, "off"))
+
+        return moves
+
+
+    def apply_move(self, move):
+        source, target = move
+        player = self.turn
+        pieces = self.p1_pieces if player == 0 else self.p2_pieces
+
+        # Handle moving from the bar
+        if source == "bar":
+            pieces[target] += 1
+            self.bar[player] -= 1
+
+        # Handle bearing off
+        elif target == "off":
+            if player == 0:
+                in_home = all(pieces[i] == 0 for i in range(0, 18))  # Player 1's home check
+            else:
+                in_home = all(pieces[i] == 0 for i in range(6, 24))  # Player 2's home check
+
+            if in_home:
+                pieces[source] -= 1
+                self.off[player] += 1
+            else:
+                raise ValueError("Invalid move: Cannot bear off unless all pieces are in home board.")
+
+        # Normal move
+        else:
+            pieces[source] -= 1
+            pieces[target] += 1
+
+
+
+    def undo_move(self, move):
+        # Undo a move by reversing the apply_move logic
+        target, source = move[::-1]
+        player = self.turn
+        pieces = self.p1_pieces if player == 0 else self.p2_pieces
+        opponent_pieces = self.p2_pieces if player == 0 else self.p1_pieces
+
+        # Handle undoing a move from the bar
+        if source == "bar":
+            pieces[target] -= 1
+            self.bar[player] += 1
+            if opponent_pieces[target] == 0 and self.bar[1 - player] > 0:
+                opponent_pieces[target] = 1
+                self.bar[1 - player] -= 1
+        elif target == "off":
+            pieces[source] += 1
+            self.off[player] -= 1
+        else:
+            pieces[target] -= 1
+            pieces[source] += 1
+            if opponent_pieces[target] == 0 and self.bar[1 - player] > 0:
+                opponent_pieces[target] = 1
+                self.bar[1 - player] -= 1
+
+    def is_game_over(self):
+        return self.off[0] == 15 or self.off[1] == 15
+
+    def evaluate_winner(self):
+        if self.off[0] == 15:
+            return 0  # Player 1 wins
+        elif self.off[1] == 15:
+            return 1  # Player 2 wins
+        return -1  # Game is not over

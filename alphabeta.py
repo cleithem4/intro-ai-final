@@ -1,29 +1,27 @@
-class BasePlayer:
-    def __init__(self, max_depth=3):
-        self.max_depth = max_depth
-        self.resolved = {}
+from minimax import PlayerMM
 
-    def heuristic(self, board):
-        # Example heuristic: difference in borne-off pieces and pieces on the bar
-        return (board.off[0] - board.off[1]) * 10 - (board.bar[0] - board.bar[1]) * 5
-
-    def findMove(self, board):
-        raise NotImplementedError("This method should be implemented in subclasses.")
-"""
-class PlayerMM(BasePlayer):
+class PlayerAB(PlayerMM):
     def findMove(self, board):
         best_move = None
         best_value = float('-inf') if board.turn == 0 else float('inf')
+        alpha = float('-inf')
+        beta = float('inf')
         for move in board.get_valid_moves(board.turn):
             board.apply_move(move)
-            value = self.minimax(board, self.max_depth - 1, board.turn == 1)
+            value = self.alphaBeta(board, self.max_depth - 1, alpha, beta, board.turn == 1)
             board.undo_move(move)
             if (board.turn == 0 and value > best_value) or (board.turn == 1 and value < best_value):
                 best_value = value
                 best_move = move
+            if board.turn == 0:
+                alpha = max(alpha, value)
+            else:
+                beta = min(beta, value)
+            if beta <= alpha:
+                break
         return best_move
 
-    def minimax(self, board, depth, minimizing_player):
+    def alphaBeta(self, board, depth, alpha, beta, minimizing_player):
         if depth == 0 or board.is_game_over():
             return self.heuristic(board)
 
@@ -31,16 +29,21 @@ class PlayerMM(BasePlayer):
             min_eval = float('inf')
             for move in board.get_valid_moves(board.turn):
                 board.apply_move(move)
-                eval = self.minimax(board, depth - 1, False)
+                eval = self.alphaBeta(board, depth - 1, alpha, beta, False)
                 board.undo_move(move)
                 min_eval = min(min_eval, eval)
+                beta = min(beta, eval)
+                if beta <= alpha:
+                    break
             return min_eval
         else:
             max_eval = float('-inf')
             for move in board.get_valid_moves(board.turn):
                 board.apply_move(move)
-                eval = self.minimax(board, depth - 1, True)
+                eval = self.alphaBeta(board, depth - 1, alpha, beta, True)
                 board.undo_move(move)
                 max_eval = max(max_eval, eval)
+                alpha = max(alpha, eval)
+                if beta <= alpha:
+                    break
             return max_eval
-"""

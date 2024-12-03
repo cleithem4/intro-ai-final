@@ -1,4 +1,17 @@
+from alphabeta import PlayerAB
+from minimax import PlayerMM
 from game import Game
-#https://prod.liveshare.vsengsaas.visualstudio.com/join?3CDF3D6DB26EA049908A7EFE72DF356BEF98
-game = Game()
-game.play_game()
+
+if __name__ == "__main__":
+    from random import seed
+
+    # Optional: Seed random number generator for reproducible results
+    seed(3)
+
+    # Initialize players
+    player1 = PlayerMM(max_depth=3)  # AI using Alpha-Beta Pruning
+    player2 = PlayerAB(max_depth=3)  # AI using MiniMax
+
+    # Create and start the game
+    game = Game(player1, player2)
+    game.play()
