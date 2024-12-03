@@ -76,7 +76,7 @@ class Game:
         for move in moves:
             print(f"Move: {move}")
             self.board.move(self.current_player.id, *move)
-            self.dice.remove(abs(move[1] - move[0]))
+            #self.dice.remove(abs(move[1] - move[0]))
 
         if self.board.off[self.current_player.id] == 15:
             print(f"{self.current_player} wins!")
