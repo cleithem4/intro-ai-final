@@ -1,6 +1,7 @@
 Hello!
 
 This is our Backgammon AI.
+By: Peter Manolis, Cody Leithem, and Mark Dzwonczyk
 
 To run the game is very simple. 
 
