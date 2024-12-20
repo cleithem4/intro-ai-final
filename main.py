@@ -6,11 +6,12 @@ if __name__ == "__main__":
     from random import seed
 
     # Optional: Seed random number generator for reproducible results
-    seed(3532535)
+  
+    seed(212)
 
     # Initialize players
-    player1 = PlayerMM(max_depth=4)  # AI using Alpha-Beta Pruning
-    player2 = PlayerAB(max_depth=3)  # AI using MiniMax
+    player1 = PlayerAB(max_depth=2)  # AI using Alpha-Beta Pruning with depth 2
+    player2 = PlayerAB(max_depth=4)  # AI using Alpha-Beta Pruning with depth 4
 
     # Create and start the game
     game = Game(player1, player2)

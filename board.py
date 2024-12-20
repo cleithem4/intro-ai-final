@@ -23,6 +23,17 @@ class Board:
         # Player 1 starts the game
         self.turn = 0
         self.dice = []        
+    def display_board(self):
+        print("Current Board State:")
+        print("P1 Pieces:")
+        print(" | ".join(f"{i}:{self.p1_pieces[i]}" for i in range(24)))
+        print("-" * 50)
+        print("P2 Pieces:")
+        print(" | ".join(f"{i}:{self.p2_pieces[i]}" for i in range(24)))
+        print("-" * 50)
+        print(f"Bar: P1={self.bar[0]} | P2={self.bar[1]}")
+        print(f"Off: P1={self.off[0]} | P2={self.off[1]}")
+
     def roll_dice(self):
         from random import randint
         self.dice = [randint(1, 6), randint(1, 6)]
@@ -33,11 +44,10 @@ class Board:
         bar_pieces = self.bar[player]
 
         # Check if all pieces are in the home board
-        if player == 0:
+        if player == 0:  # Player 1
             in_home = all(pieces[i] == 0 for i in range(0, 18))
-        else:
+        else:  # Player 2
             in_home = all(pieces[i] == 0 for i in range(6, 24))
-
 
         # If there are pieces on the bar, only allow moves to bring them in
         if bar_pieces > 0:
@@ -61,9 +71,10 @@ class Board:
             home_end = 24 if player == 0 else 6
             for i in range(home_start, home_end):
                 if pieces[i] > 0:
-                    moves.append((i, "off"))
+                    moves.append((i, "off"))  # Allow bearing off pieces from the home board
 
         return moves
+
 
 
     def apply_move(self, move):
@@ -78,21 +89,26 @@ class Board:
 
         # Handle bearing off
         elif target == "off":
-            if player == 0:
+            if player == 0:  # Player 1
                 in_home = all(pieces[i] == 0 for i in range(0, 18))  # Player 1's home check
-            else:
+            else:  # Player 2
                 in_home = all(pieces[i] == 0 for i in range(6, 24))  # Player 2's home check
 
             if in_home:
-                pieces[source] -= 1
-                self.off[player] += 1
+                if player == 0 and source >= 18:  # Ensure Player 1 is bearing off correctly
+                    pieces[source] -= 1
+                    self.off[player] += 1
+                if player == 1 and source < 6:  # Ensure Player 2 is bearing off correctly
+                    if in_home and self.bar[player] == 0:
+                        pieces[source] -= 1
+                        self.off[player] += 1
             else:
                 raise ValueError("Invalid move: Cannot bear off unless all pieces are in home board.")
-
-        # Normal move
+                # Normal move
         else:
             pieces[source] -= 1
             pieces[target] += 1
+
 
 
 
